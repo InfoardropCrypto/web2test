@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>sosmed.iac.io</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+   <h1>IACM</h1>
+    <header>
+    <details>
+        <summary>☰</summary>
+        <a href="index.html"><button>Home</button></a>
+        <a href="leaderboard.html"><button>Leader board</button></a>
+         <a href="group.html"><button>Community</button></a>
+    </details>
+    
+    <!-- Tombol Profil -->
+    <div id="profileButton" class="profile-btn" style="display: none;" onclick="toggleProfileMenu()">
+        <img src="" alt="Profil" class="avatar">
+    </div>
+
+    <div id="profileMenu" class="profile-menu" style="display: none;">
+        <p id="profileEmail"></p>
+        
+        <button id="logoutBtn" style="display: none;">Logout</button>
+    </div>
+</header>
+<br>
+   <div height="150px"></div>
+
+    <main>
+        <section id="authSection">
+            <input type="email" id="email" placeholder="Email">
+            <input type="password" id="password" placeholder="Password">
+            <button id="signupBtn" style="display:none;">Daftar</button>
+            <button id="loginBtn">Login</button>
+            
+        </section>
+        <div id="profileModal" class="modal">
+    <div class="modal-content">
+        <span class="close" onclick="closeProfile()">&times;</span>
+        <h2>Profil Pengguna</h2>
+        <div id="profileContent"></div>
+    </div>
+</div>
+
+        <section id="feed"></section>
+        <section id="leaderboard" style="display:none;">
+            <h2>Leaderboard</h2>
+            <ul id="leaderboardList"></ul>
+        </section>
+        <p style="height:200px;"></p>
+        <footer>
+        <section id="postMessageSection" style="display: none;">
+            <textarea id="postMessageContent" placeholder="Apa yang sedang terjadi? Atau kirim pesan..."></textarea>
+            <button id="postMessageBtn">Kirim</button>
+        </section>
+        </footer>
+    </main>
+    <!-- Firebase SDK -->
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+<script src="script.js"></script>
+
+</body>
+</html>

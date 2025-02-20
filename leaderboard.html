@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>sosmed.iac.io</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+   <h1>IAC Media</h1>
+    <header>
+        <details>
+          
+          <summary style="font-height:100px;">☰</summary>
+          <button id="signupBtn" style="display:none;">Daftar</button>
+        <button id="logoutBtn" style="display: none;">Logout</button>
+        <a href="index.html"><button>
+        home</button></a>
+        <a href="leaderboard.html"><button>
+        leaderboard</button></a>
+        </details>
+      <br>
+    </header>
+    <main>
+        <section id="authSection">
+            <input type="email" id="email" placeholder="Email">
+            <input type="password" id="password" placeholder="Password">
+            <button id="loginBtn">Login</button>
+        </section>
+        <section id="feed" style="display:none;"></section>
+        <section id="leaderboard">
+            <h2>Leaderboard</h2>
+            <ul id="leaderboardList"></ul>
+        </section>
+        <p style="height:200px;"></p>
+        <footer style="display:none;">
+        <section id="postMessageSection" style="display: none;">
+            <textarea id="postMessageContent" placeholder="Apa yang sedang terjadi? Atau kirim pesan..."></textarea>
+            <button id="postMessageBtn">Kirim</button>
+        </section>
+        </footer>
+    </main>
+    <!-- Firebase SDK -->
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+<script src="script.js"></script>
+
+</body>
+</html>
