@@ -94,11 +94,11 @@ database.ref("postsMessages").on("child_added", snapshot => {
     element.classList.add("message");
 
     let postContent = `
-        <p>
-            <strong><span class="clickable" onclick="viewProfile('${data.uid}')">${data.user} ${data.badge || "😀"}</span>:</strong> 
-            ${data.content} 
-            <span class='timestamp'>(${data.timestamp})</span>
-        </p>`;
+    <p>
+        <strong><span class="clickable" onclick="viewProfile('${data.uid}')">${data.user} ${data.badge || "😀"}</span>:</strong> 
+        ${autoLink(data.content)}  
+        <span class='timestamp'>(${data.timestamp})</span>
+    </p>`;
 
     element.innerHTML = postContent;
 
@@ -123,6 +123,59 @@ database.ref("postsMessages").on("child_added", snapshot => {
             element.appendChild(deleteBtn);
         }
     }
+    const likeBtn = document.createElement("button");
+likeBtn.innerText = "❤️";
+likeBtn.classList.add("like-btn");
+
+const likeText = document.createElement("span");
+likeText.innerText = " (0)";
+likeBtn.appendChild(likeText);
+
+// Ambil user login saat ini
+auth.onAuthStateChanged(user => {
+    if (user) {
+        const likeRef = database.ref(`postsMessages/${postId}/likes/${user.uid}`);
+        const likeCountRef = database.ref(`postsMessages/${postId}/likesCount`);
+
+        // Cek apakah user sudah like
+        likeRef.once("value").then(snapshot => {
+            if (snapshot.exists()) {
+                likeBtn.style.color = "red";
+                likeBtn.dataset.liked = "true";
+            } else {
+                likeBtn.style.color = "";
+                likeBtn.dataset.liked = "false";
+            }
+        });
+
+        // Ambil total like
+        likeCountRef.on("value", snapshot => {
+            const count = snapshot.val() || 0;
+            likeText.innerText = ` (${count})`;
+        });
+
+        // Klik Like
+        likeBtn.addEventListener("click", () => {
+            const liked = likeBtn.dataset.liked === "true";
+
+            if (!liked) {
+                // Like
+                likeRef.set(true);
+                likeCountRef.transaction(current => (current || 0) + 1);
+                likeBtn.style.color = "red";
+                likeBtn.dataset.liked = "true";
+            } else {
+                // Unlike
+                likeRef.remove();
+                likeCountRef.transaction(current => Math.max((current || 1) - 1, 0));
+                likeBtn.style.color = "";
+                likeBtn.dataset.liked = "false";
+            }
+        });
+    }
+});
+element.appendChild(likeBtn);
+
 });
 
     // Bagian Reply
@@ -134,7 +187,62 @@ database.ref("postsMessages").on("child_added", snapshot => {
 
         const replyElement = document.createElement("div");
         replyElement.classList.add("reply");
-        replyElement.innerHTML = `<p><strong><span class="clickable" onclick="viewProfile('${replyData.uid}')">${replyData.user} ${replyData.badge || "😀"}</span>:</strong> ${replyData.content} <span class='timestamp'>(${replyData.timestamp})</span></p>`;
+        replyElement.innerHTML = `<p><strong><span class="clickable" onclick="viewProfile('${replyData.uid}')">${replyData.user} ${replyData.badge || "😀"}</span>:</strong> ${autoLink(replyData.content)} <span class='timestamp'>(${replyData.timestamp})</span></p>`;
+        
+        // === LIKE BUTTON FOR REPLY ===
+const replyLikeBtn = document.createElement("button");
+replyLikeBtn.innerText = "❤️ Like";
+replyLikeBtn.classList.add("like-btn");
+
+const replyLikeText = document.createElement("span");
+replyLikeText.innerText = " (0)";
+replyLikeBtn.appendChild(replyLikeText);
+
+auth.onAuthStateChanged(user => {
+    if (user) {
+        const replyLikeRef = database.ref(`postsMessages/${postId}/replies/${replyId}/likes/${user.uid}`);
+        const replyLikeCountRef = database.ref(`postsMessages/${postId}/replies/${replyId}/likesCount`);
+
+        // Cek apakah sudah like reply ini
+        replyLikeRef.once("value").then(snapshot => {
+            if (snapshot.exists()) {
+                replyLikeBtn.style.color = "red";
+                replyLikeBtn.dataset.liked = "true";
+            } else {
+                replyLikeBtn.style.color = "";
+                replyLikeBtn.dataset.liked = "false";
+            }
+        });
+
+        // Ambil total like reply ini
+        replyLikeCountRef.on("value", snapshot => {
+            const count = snapshot.val() || 0;
+            replyLikeText.innerText = ` (${count})`;
+        });
+
+        // Klik Like
+        replyLikeBtn.addEventListener("click", () => {
+            const liked = replyLikeBtn.dataset.liked === "true";
+
+            if (!liked) {
+                replyLikeRef.set(true);
+                replyLikeCountRef.transaction(current => (current || 0) + 1);
+                replyLikeBtn.style.color = "red";
+                replyLikeBtn.dataset.liked = "true";
+            } else {
+                replyLikeRef.remove();
+                replyLikeCountRef.transaction(current => Math.max((current || 1) - 1, 0));
+                replyLikeBtn.style.color = "";
+                replyLikeBtn.dataset.liked = "false";
+            }
+        });
+    }
+});
+
+// Tambahkan tombol like reply ke dalam replyElement
+replyElement.appendChild(replyLikeBtn);
+
+
 
         // Tombol Hapus untuk Reply
         auth.onAuthStateChanged(user => {
@@ -298,3 +406,18 @@ function logout() {
         location.reload();
     });
 }
+
+function autoLink(text) {
+    const urlRegex = /(https?:\/\/[^\s]+)/g;
+    return text.replace(urlRegex, (url) => `<a href="${url}" target="_blank" rel="noopener noreferrer">${url}</a>`);
+}
+
+document.getElementById('searchInput').addEventListener('input', function () {
+    const keyword = this.value.toLowerCase();
+    const messages = document.querySelectorAll('.message');
+
+    messages.forEach(msg => {
+        const text = msg.innerText.toLowerCase();
+        msg.style.display = text.includes(keyword) ? 'block' : 'none';
+    });
+});
