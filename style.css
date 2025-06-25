@@ -28,7 +28,7 @@ h2 {
 }
 
 #authSection, #postMessageSection, #feed, #leaderboard {
-    width: 100%;
+    
 }
 
 input[type="email"],
@@ -42,7 +42,16 @@ textarea {
     border-radius: 5px;
     font-size: 16px;
     box-sizing: border-box;
+    resize: none;
 }
+
+textarea {
+    width: 100%;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    white-space: pre-wrap;
+}
+
 
 button {
     width: 80px;
@@ -74,6 +83,16 @@ button:hover {
 .message p {
     margin: 5px 0;
     font-size: 15px;
+    white-space: pre-line;
+}
+
+.message a {
+    color: blue;
+    text-decoration: underline;
+}
+
+.message a:hover {
+    color: darkblue;
 }
 
 .timestamp {
@@ -229,4 +248,30 @@ footer {
     padding: 10px;
     border-radius: 5px;
     box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+}
+
+.like-btn {
+    margin: 5px;
+    background-color: #2f92cf78;
+    border: none;
+    cursor: pointer;
+    border-radius: 5px;
+}
+.like-btn:hover {
+    background-color: pink;
+}
+
+#searchSection {
+    width: 100%;
+    max-width: 600px;
+    margin: 20px 0;
+}
+
+#searchInput {
+    width: 100%;
+    padding: 10px;
+    font-size: 16px;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+    box-sizing: border-box;
 }
