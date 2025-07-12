@@ -1,423 +1,558 @@
 var firebaseConfig = {
-    apiKey: "AIzaSyCtvxvFSXOT0fkRpl84U6LTD8xg8rGWrV8",
-    authDomain: "web3-iac-wallet.firebaseapp.com",
-    databaseURL: "https://web3-iac-wallet-default-rtdb.asia-southeast1.firebasedatabase.app",
-    projectId: "web3-iac-wallet",
-    storageBucket: "web3-iac-wallet.firebasestorage.app",
-    messagingSenderId: "462702808978",
-    appId: "1:462702808978:web:843402ceb14d9eb026bb4b",
-    measurementId: "G-H8W6VMJJPH"
-  };
-firebase.initializeApp(firebaseConfig);
+  apiKey: "AIzaSyBtoafs5RAPyMYO4VwIWEMb98Ye_X0w-EA",
+  authDomain: "web3-iac.firebaseapp.com",
+  databaseURL: "https://web3-iac-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "web3-iac",
+  storageBucket: "web3-iac.firebasestorage.app",
+  messagingSenderId: "177980099871",
+  appId: "1:177980099871:web:9ecb0cc57ac00b757c342a",
+  measurementId: "G-9VG2WXG47T"
+};
 
+firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const database = firebase.database();
+const storage = firebase.storage();
 
-document.getElementById("signupBtn").addEventListener("click", () => {
-    const email = document.getElementById("email").value;
-    const password = document.getElementById("password").value;
-    auth.createUserWithEmailAndPassword(email, password).then(userCredential => {
-        database.ref("users/" + userCredential.user.uid).set({
-            email: email,
-            xp: 0,
-            level: 1
-        });
-    }).catch(error => alert(error.message));
-});
+const emailInput = document.getElementById("email");
+const passwordInput = document.getElementById("password");
+const loginBtn = document.getElementById("loginBtn");
+const signupBtn = document.getElementById("signupBtn");
+const logoutBtn = document.getElementById("logoutBtn");
+const editProfileBtn = document.getElementById("editProfileBtn");
+const themeToggle = document.getElementById("themeToggle");
+const saveProfileBtn = document.getElementById("saveProfileBtn");
 
-document.getElementById("loginBtn").addEventListener("click", () => {
-    const email = document.getElementById("email").value;
-    const password = document.getElementById("password").value;
-    auth.signInWithEmailAndPassword(email, password).catch(error => alert(error.message));
-});
+const authSection = document.getElementById("authSection");
+const postMessageSection = document.getElementById("postMessageSection");
+const profileButton = document.getElementById("profileButton");
+const profileMenu = document.getElementById("profileMenu");
+const profileEmail = document.getElementById("profileEmail");
+const feed = document.getElementById("feed");
+const mainContent = document.getElementById("mainContent");
+const leaderboard = document.getElementById("leaderboard");
+const homeBtn = document.getElementById("homeBtn");
+const leaderboardBtn = document.getElementById("leaderboardBtn");
 
-auth.onAuthStateChanged(user => {
-    if (user) {
-        document.getElementById("postMessageSection").style.display = "block";
-        document.getElementById("logoutBtn").style.display = "block";
-        document.getElementById("authSection").style.display = "none";
+let themeMode = localStorage.getItem("themeMode") || "auto";
+
+function applyTheme(mode) {
+  if (mode === "dark") {
+    document.body.classList.add("dark-mode");
+    themeToggle.innerText = "☀️";
+  } else if (mode === "light") {
+    document.body.classList.remove("dark-mode");
+    themeToggle.innerText = "🌙";
+  } else if (mode === "auto") {
+    const hour = new Date().getHours();
+    const isDarkTime = hour >= 18 || hour < 7;
+    if (isDarkTime) {
+      document.body.classList.add("dark-mode");
+      themeToggle.innerText = "☀️";
     } else {
-        document.getElementById("postMessageSection").style.display = "none";
-        document.getElementById("logoutBtn").style.display = "none";
-        document.getElementById("signupBtn").style.display = "block";
-        document.getElementById("authSection").style.display = "block";
+      document.body.classList.remove("dark-mode");
+      themeToggle.innerText = "🌙";
     }
-});
+  }
+}
 
-document.getElementById("logoutBtn").addEventListener("click", () => {
-    auth.signOut();
-});
+if (themeToggle) {
+  applyTheme(themeMode);
 
-document.getElementById("postMessageBtn").addEventListener("click", () => {
-    const content = document.getElementById("postMessageContent").value;
-    if (content) {
-        const user = auth.currentUser;
-        const xpGain = Math.floor(Math.random() * (35 - 15 + 1)) + 15;
-        
-        const postRef = database.ref("postsMessages").push();
-        postRef.set({
-            content: content,
-            user: user.email,
-            uid: user.uid,
-            timestamp: new Date().toLocaleTimeString() + " " + new Date().toLocaleDateString(),
-            replies: {}
-        });
-
-        const userRef = database.ref("users/" + user.uid);
-        userRef.once("value").then(snapshot => {
-            let userData = snapshot.val() || { xp: 0, level: 1 };
-            let newXp = userData.xp + xpGain;
-            let newLevel = userData.level;
-            let xpRequired = userData.level <= 5 ? 500 : 1200;
-            
-            if (newXp >= xpRequired) {
-                newXp -= xpRequired;
-                newLevel++;
-            }
-
-            let badge = "😀";
-            if (newLevel >= 5) badge = "😁";
-            if (newLevel >= 15) badge = "😈";
-            
-            userRef.update({ xp: newXp, level: newLevel });
-            postRef.update({ badge: badge });
-        });
-
-        document.getElementById("postMessageContent").value = "";
+  themeToggle.addEventListener("click", () => {
+    if (themeMode === "light") {
+      themeMode = "dark";
+    } else if (themeMode === "dark") {
+      themeMode = "auto";
+    } else {
+      themeMode = "light";
     }
-});
+    localStorage.setItem("themeMode", themeMode);
+    applyTheme(themeMode);
+  });
+}
 
-database.ref("postsMessages").on("child_added", snapshot => {
-    const data = snapshot.val();
-    const postId = snapshot.key;
-    const element = document.createElement("div");
-    element.classList.add("message");
-
-    let postContent = `
-    <p>
-        <strong><span class="clickable" onclick="viewProfile('${data.uid}')">${data.user} ${data.badge || "😀"}</span>:</strong> 
-        ${autoLink(data.content)}  
-        <span class='timestamp'>(${data.timestamp})</span>
-    </p>`;
-
-    element.innerHTML = postContent;
-
-    // Tombol Hapus
-    auth.onAuthStateChanged(user => {
-    if (user && user.uid === data.uid) {
-        if (!element.querySelector(".delete-btn")) { // Cek apakah tombol hapus sudah ada
-            const deleteBtn = document.createElement("button");
-            deleteBtn.innerText = "Hapus";
-            deleteBtn.classList.add("delete-btn");
-            deleteBtn.addEventListener("click", () => {
-                database.ref(`postsMessages/${postId}/replies`).once("value").then(replySnapshot => {
-                    if (!replySnapshot.exists()) {
-                        database.ref(`postsMessages/${postId}`).remove().then(() => {
-                            element.remove();
-                        });
-                    } else {
-                        alert("Tidak bisa menghapus post karena sudah memiliki balasan.");
-                    }
-                });
-            });
-            element.appendChild(deleteBtn);
-        }
+function applyTheme(mode) {
+  if (mode === "dark") {
+    document.body.classList.add("dark-mode");
+    themeToggle.innerText = "☀️";
+  } else if (mode === "light") {
+    document.body.classList.remove("dark-mode");
+    themeToggle.innerText = "🌙";
+  } else if (mode === "auto") {
+    const hour = new Date().getHours();
+    const isDarkTime = hour >= 18 || hour < 7;
+    if (isDarkTime) {
+      document.body.classList.add("dark-mode");
+      themeToggle.innerText = "☀️";
+    } else {
+      document.body.classList.remove("dark-mode");
+      themeToggle.innerText = "🌙";
     }
-    const likeBtn = document.createElement("button");
-likeBtn.innerText = "❤️";
-likeBtn.classList.add("like-btn");
+  }
+}
 
-const likeText = document.createElement("span");
-likeText.innerText = " (0)";
-likeBtn.appendChild(likeText);
-
-// Ambil user login saat ini
-auth.onAuthStateChanged(user => {
-    if (user) {
-        const likeRef = database.ref(`postsMessages/${postId}/likes/${user.uid}`);
-        const likeCountRef = database.ref(`postsMessages/${postId}/likesCount`);
-
-        // Cek apakah user sudah like
-        likeRef.once("value").then(snapshot => {
-            if (snapshot.exists()) {
-                likeBtn.style.color = "red";
-                likeBtn.dataset.liked = "true";
-            } else {
-                likeBtn.style.color = "";
-                likeBtn.dataset.liked = "false";
-            }
-        });
-
-        // Ambil total like
-        likeCountRef.on("value", snapshot => {
-            const count = snapshot.val() || 0;
-            likeText.innerText = ` (${count})`;
-        });
-
-        // Klik Like
-        likeBtn.addEventListener("click", () => {
-            const liked = likeBtn.dataset.liked === "true";
-
-            if (!liked) {
-                // Like
-                likeRef.set(true);
-                likeCountRef.transaction(current => (current || 0) + 1);
-                likeBtn.style.color = "red";
-                likeBtn.dataset.liked = "true";
-            } else {
-                // Unlike
-                likeRef.remove();
-                likeCountRef.transaction(current => Math.max((current || 1) - 1, 0));
-                likeBtn.style.color = "";
-                likeBtn.dataset.liked = "false";
-            }
-        });
+document.addEventListener("DOMContentLoaded", () => {
+  const userPref = localStorage.getItem("theme");
+  if (!userPref) {
+    applyAutoTheme();
+  } else {
+    const isDark = userPref === "dark";
+    if (isDark) {
+      document.body.classList.add("dark-mode");
+      if (themeToggle) themeToggle.innerText = "☀️";
+    } else {
+      document.body.classList.remove("dark-mode");
+      if (themeToggle) themeToggle.innerText = "🌙";
     }
-});
-element.appendChild(likeBtn);
-
+  }
 });
 
-    // Bagian Reply
-    const repliesContainer = document.createElement("div");
-    repliesContainer.classList.add("replies");
-    database.ref(`postsMessages/${postId}/replies`).on("child_added", replySnapshot => {
-        const replyData = replySnapshot.val();
-        const replyId = replySnapshot.key;
-
-        const replyElement = document.createElement("div");
-        replyElement.classList.add("reply");
-        replyElement.innerHTML = `<p><strong><span class="clickable" onclick="viewProfile('${replyData.uid}')">${replyData.user} ${replyData.badge || "😀"}</span>:</strong> ${autoLink(replyData.content)} <span class='timestamp'>(${replyData.timestamp})</span></p>`;
-        
-        // === LIKE BUTTON FOR REPLY ===
-const replyLikeBtn = document.createElement("button");
-replyLikeBtn.innerText = "❤️ Like";
-replyLikeBtn.classList.add("like-btn");
-
-const replyLikeText = document.createElement("span");
-replyLikeText.innerText = " (0)";
-replyLikeBtn.appendChild(replyLikeText);
+if (profileButton) {
+  profileButton.addEventListener("click", toggleProfileMenu);
+}
 
 auth.onAuthStateChanged(user => {
     if (user) {
-        const replyLikeRef = database.ref(`postsMessages/${postId}/replies/${replyId}/likes/${user.uid}`);
-        const replyLikeCountRef = database.ref(`postsMessages/${postId}/replies/${replyId}/likesCount`);
+        if (authSection) authSection.style.display = "none";
 
-        // Cek apakah sudah like reply ini
-        replyLikeRef.once("value").then(snapshot => {
-            if (snapshot.exists()) {
-                replyLikeBtn.style.color = "red";
-                replyLikeBtn.dataset.liked = "true";
-            } else {
-                replyLikeBtn.style.color = "";
-                replyLikeBtn.dataset.liked = "false";
+        if (postMessageSection) {
+  postMessageSection.style.display = "flex";
+}
+
+        profileButton.style.display = "block";
+        document.getElementById("profileMenu").style.display = "none";
+        
+        database.ref(`users/${user.uid}`).on("value", snapshot => {
+            const userData = snapshot.val();
+            if (userData) {
+                profileEmail.innerText = userData.displayName || userData.email;
+                const avatar = `<img src="${userData.profilePictureURL || 'img/profil_1.png'}" alt="Profil" class="avatar">`;
+                profileButton.innerHTML = avatar;
             }
         });
+        loadFeed();
+    } else {
+        if (authSection) authSection.style.display = "block";
+        if (postMessageSection) postMessageSection.style.display = "flex";
 
-        // Ambil total like reply ini
-        replyLikeCountRef.on("value", snapshot => {
-            const count = snapshot.val() || 0;
-            replyLikeText.innerText = ` (${count})`;
-        });
-
-        // Klik Like
-        replyLikeBtn.addEventListener("click", () => {
-            const liked = replyLikeBtn.dataset.liked === "true";
-
-            if (!liked) {
-                replyLikeRef.set(true);
-                replyLikeCountRef.transaction(current => (current || 0) + 1);
-                replyLikeBtn.style.color = "red";
-                replyLikeBtn.dataset.liked = "true";
-            } else {
-                replyLikeRef.remove();
-                replyLikeCountRef.transaction(current => Math.max((current || 1) - 1, 0));
-                replyLikeBtn.style.color = "";
-                replyLikeBtn.dataset.liked = "false";
-            }
-        });
+        profileButton.style.display = "none";
+        profileMenu.style.display = "none";
+        feed.innerHTML = "";
+        mainContent.style.display = "block";
+        leaderboard.style.display = "none";
     }
 });
 
-// Tambahkan tombol like reply ke dalam replyElement
-replyElement.appendChild(replyLikeBtn);
+if (loginBtn) {
+  loginBtn.addEventListener("click", () => {
+    auth.signInWithEmailAndPassword(emailInput.value, passwordInput.value)
+      .catch(error => alert(error.message));
+  });
+}
 
-
-
-        // Tombol Hapus untuk Reply
-        auth.onAuthStateChanged(user => {
-            if (user && user.uid === replyData.uid) {
-                const deleteReplyBtn = document.createElement("button");
-                deleteReplyBtn.innerText = "Hapus";
-                deleteReplyBtn.addEventListener("click", () => {
-                    database.ref(`postsMessages/${postId}/replies/${replyId}`).remove().then(() => {
-                        replyElement.remove();
-                    }).catch(error => {
-                        alert("Gagal menghapus reply: " + error.message);
-                    });
-                });
-                replyElement.appendChild(deleteReplyBtn);
-            }
+if (signupBtn) {
+  signupBtn.addEventListener("click", () => {
+    auth.createUserWithEmailAndPassword(emailInput.value, passwordInput.value)
+      .then(userCredential => {
+        const uid = userCredential.user.uid;
+        const defaultEmail = userCredential.user.email;
+        return database.ref(`users/${uid}`).set({
+          email: defaultEmail,
+          displayName: "",
+          bio: "",
+          profilePictureURL: "",
+          xp: 0,
+          level: 1,
+          badge: "😀"
         });
+      })
+      .then(() => {
+        const displayNameInput = document.getElementById("displayNameInput");
+        const profileModal = document.getElementById("profileModal");
+        const postMessageSection = document.getElementById("postMessageSection");
+        const profileMenu = document.getElementById("profileMenu");
 
-        repliesContainer.appendChild(replyElement);
-    });
+        if (displayNameInput) displayNameInput.value = "";
+        if (profileModal) profileModal.style.display = "block";
+        if (postMessageSection) postMessageSection.style.display = "none";
+        if (profileMenu) profileMenu.style.display = "none";
 
-    // Input Reply
-    const replyInput = document.createElement("input");
-    replyInput.type = "text";
-    replyInput.placeholder = "Tulis balasan...";
-    replyInput.classList.add("reply-input");
-    
-    const replyButton = document.createElement("button");
-    replyButton.innerText = "Reply";
-    replyButton.classList.add("reply-button");
-    replyButton.addEventListener("click", () => {
-        const replyContent = replyInput.value.trim();
-        if (replyContent) {
-            const replyRef = database.ref(`postsMessages/${postId}/replies`).push();
-            replyRef.set({
-                content: replyContent,
-                user: auth.currentUser.email,
-                uid: auth.currentUser.uid,
-                badge: "💬", // Badge default untuk reply
-                timestamp: new Date().toLocaleTimeString() + " " + new Date().toLocaleDateString()
-            });
-            replyInput.value = "";
-        }
-    });
+        alert("Selamat datang! Silakan lengkapi profil terlebih dahulu.");
+      })
+      .catch(error => alert(error.message));
+  });
+}
 
-    element.appendChild(repliesContainer);
-    element.appendChild(replyInput);
-    element.appendChild(replyButton);
-    document.getElementById("feed").prepend(element);
+if (logoutBtn) {
+  logoutBtn.addEventListener("click", () => {
+    if (confirm("Yakin ingin logout?")) {
+      auth.signOut();
+    }
+  });
+}
+
+if (homeBtn) { 
+  homeBtn.addEventListener("click", () => {
+    mainContent.style.display = "block";
+    leaderboard.style.display = "none";
 });
+}
 
-function viewProfile(uid) {
-    const userRef = database.ref(`wallets/${uid}`);
+if (leaderboardBtn) { 
+  leaderboardBtn.addEventListener("click", () => {
+    mainContent.style.display = "none";
+    leaderboard.style.display = "block";
+    updateLeaderboard();
+});
+}
 
-    userRef.once("value").then(snapshot => {
-        const data = snapshot.val();
-        if (!data) {
-            alert("Profil tidak ditemukan!");
-            return;
-        }
-
-        const selectedNetwork = "eth"; // Ganti dengan network yang sedang dipilih
-        const balance = data[selectedNetwork]?.balance || 0;
-
-        document.getElementById("profileContent").innerHTML = `
-            <p><strong>Email:</strong> ${auth.email || "Tidak diketahui"}</p>
-            <p><strong>UID:</strong> ${uid}</p>
-            <p><strong>Saldo (${selectedNetwork.toUpperCase()}):</strong> ${balance} ETH</p>
-        `;
+if (editProfileBtn) {
+  editProfileBtn.addEventListener("click", () => {
+    const user = auth.currentUser;
+    database.ref(`users/${user.uid}`).once("value").then(snapshot => {
+        const userData = snapshot.val();
+        document.getElementById("displayNameInput").value = userData.displayName || '';
         document.getElementById("profileModal").style.display = "block";
+        profileMenu.style.display = "none";
+        document.getElementById("bioInput").value = userData.bio || '';
+
     });
+});
+}
+
+if (saveProfileBtn) {
+  saveProfileBtn.addEventListener("click", () => {
+  const user = auth.currentUser;
+  const displayName = document.getElementById("displayNameInput")?.value.trim();
+  const bio = document.getElementById("bioInput")?.value.trim();
+  const profilePictureURL = document.getElementById("profilePictureURLInput")?.value.trim();
+
+  if (user) {
+    const updates = {};
+    if (displayName) updates.displayName = displayName;
+    if (bio !== undefined) updates.bio = bio;
+    if (profilePictureURL.startsWith("https://")) updates.profilePictureURL = profilePictureURL;
+
+    database.ref(`users/${user.uid}`).update(updates)
+      .then(() => {
+        closeProfile();
+        if (postMessageSection) postMessageSection.style.display = "flex";
+      });
+  }
+});
+
 }
 
 function closeProfile() {
     document.getElementById("profileModal").style.display = "none";
 }
 
-function updateLeaderboard() {
-    database.ref("users").orderByChild("xp").limitToLast(10).on("value", snapshot => {
-        const leaderboardList = document.getElementById("leaderboardList");
-        leaderboardList.innerHTML = "";
-        let users = [];
+document.getElementById("postMessageBtn").addEventListener("click", () => {
+    const content = document.getElementById("postMessageContent").value.trim();
+    if (content) {
+        const user = auth.currentUser;
+        const xpGain = Math.floor(Math.random() * (35 - 15 + 1)) + 15;
 
-        snapshot.forEach(childSnapshot => {
-            let userData = childSnapshot.val();
-            userData.userId = childSnapshot.key; // Ambil UID dari Firebase
-            users.push(userData);
-        });
-
-        users.reverse().forEach(user => {
-            const li = document.createElement("li");
-            li.innerHTML = `${user.userId} - Level: ${user.level}, XP: ${user.xp}`;
-            leaderboardList.appendChild(li);
-        });
-    });
-}
-updateLeaderboard();
-
-function replyMessage(postId) {
-    const replyText = document.getElementById(`replyInput-${postId}`).value;
-    const gifUrl = document.getElementById(`replyGif-${postId}`).value; // Input URL GIF
-    const user = auth.currentUser;
-    const selectedNetwork = "eth"; // Hanya menggunakan saldo ETH
-
-    if (!user || (!replyText && !gifUrl)) {
-        alert("Ketik pesan atau masukkan URL GIF!");
-        return;
-    }
-
-    const balanceRef = database.ref(`wallets/${user.uid}/${selectedNetwork}/balance`);
-
-    balanceRef.once("value").then(snapshot => {
-        let balance = snapshot.val() || 0;
-
-        if (gifUrl && balance < gifCost) {
-            alert("Saldo ETH tidak cukup untuk mengirim GIF!");
-            return;
-        }
-
-        if (gifUrl) {
-            balance -= gifCost;
-            balanceRef.set(balance); // Kurangi saldo ETH jika reply dengan GIF
-        }
-
-        const replyRef = database.ref(`postsMessages/${postId}/replies`).push();
-        replyRef.set({
-            replyText: replyText,
-            gifUrl: gifUrl || null,
+        database.ref("postsMessages").push().set({
+            content: content,
             user: user.email,
             uid: user.uid,
-            timestamp: new Date().toLocaleTimeString() + " " + new Date().toLocaleDateString()
+            timestamp: new Date().toLocaleString("id-ID"),
+            likesCount: 0
         });
 
-        document.getElementById(`replyInput-${postId}`).value = "";
-        document.getElementById(`replyGif-${postId}`).value = "";
-    });
-}
+        const userRef = database.ref(`users/${user.uid}`);
+        userRef.transaction(userData => {
+            if (userData) {
+                userData.xp = (userData.xp || 0) + xpGain;
+                const xpRequired = userData.level <= 5 ? 500 : 1200;
+                if (userData.xp >= xpRequired) {
+                    userData.xp -= xpRequired;
+                    userData.level++;
+                }
+                if (userData.level >= 15) userData.badge = "😈";
+                else if (userData.level >= 5) userData.badge = "😁";
+            }
+            return userData;
+        });
+        document.getElementById("postMessageContent").value = "";
+        alert("✅ Postingan terkirim!");
 
-firebase.auth().onAuthStateChanged(user => {
-    if (user) {
-        document.getElementById("authSection").style.display = "none";
-        document.getElementById("profileButton").style.display = "block";
-        document.getElementById("profileEmail").innerText = user.email;
-    } else {
-        document.getElementById("authSection").style.display = "block";
-        document.getElementById("profileButton").style.display = "none";
-        document.getElementById("profileMenu").style.display = "none";
     }
 });
 
-function toggleProfileMenu() {
-    let menu = document.getElementById("profileMenu");
-    menu.style.display = menu.style.display === "block" ? "none" : "block";
+function loadFeed() {
+    const postsRef = database.ref("postsMessages").orderByChild("timestamp");
+    postsRef.on("value", snapshot => {
+    if (isSearching) return;
+
+    feed.innerHTML = "";
+    let posts = [];
+    snapshot.forEach(child => {
+        posts.push({ key: child.key, val: child.val() });
+    });
+    posts.reverse().forEach(post => displayPost(post.key, post.val));
+});
+
 }
 
-function openProfile() {
-    alert("Fitur profil akan segera hadir!");
+function displayPost(postId, data) {
+    const element = document.createElement("div");
+    element.classList.add("message");
+    const user = auth.currentUser;
+
+    database.ref(`users/${data.uid}`).once('value').then(userSnap => {
+        const authorData = userSnap.val() || {};
+        const authorName = authorData.displayName || data.user;
+        const authorAvatar = authorData.profilePictureURL || 'img/profil_1.png';
+
+        element.innerHTML = `
+            <div class="post-header">
+                <img src="${authorAvatar}" alt="Avatar" class="post-avatar">
+                <strong>
+  <a href="profile.html?id=${data.uid}" class="clickable" style="color:black;">
+    ${authorName} ${authorData.badge || "😀"}
+  </a>
+</strong>
+
+            </div>
+            <p id="content-${postId}" class="editable-content">
+  ${autoLink(data.content)}${data.edited ? " <span class='edited-tag'>(diedit)</span>" : ""}
+</p>
+
+            <span class='timestamp'>(${data.timestamp})</span>
+        `;
+        
+        const actions = document.createElement("div");
+        createLikeButton(actions, `postsMessages/${postId}`);
+        
+        if (user && user.uid === data.uid) {
+            const editBtn = document.createElement("button");
+            editBtn.innerText = "Edit";
+            editBtn.onclick = () => toggleEdit(postId, data.content, 'postsMessages');
+            actions.appendChild(editBtn);
+
+            const deleteBtn = document.createElement("button");
+            deleteBtn.innerText = "Hapus";
+            deleteBtn.classList.add("delete-btn");
+            deleteBtn.onclick = () => database.ref(`postsMessages/${postId}`).remove();
+            actions.appendChild(deleteBtn);
+        }
+        element.appendChild(actions);
+
+        const repliesContainer = document.createElement("div");
+        repliesContainer.classList.add("replies");
+        loadReplies(postId, repliesContainer);
+
+        element.appendChild(repliesContainer);
+        element.appendChild(createReplyInput(postId));
+        feed.appendChild(element);
+    });
+    
 }
 
-function logout() {
-    firebase.auth().signOut().then(() => {
-        location.reload();
+function createReplyInput(postId) {
+    const user = auth.currentUser;
+    const container = document.createElement("div");
+    container.className = "reply-input-container";
+    
+    const input = document.createElement("input");
+    input.type = "text";
+    input.placeholder = "Tulis balasan...";
+    input.className = "reply-input";
+
+    const button = document.createElement("button");
+    button.innerText = "Balas";
+    button.className = "reply-button";
+    button.onclick = () => {
+        if (input.value.trim()) {
+            database.ref(`postsMessages/${postId}/replies`).push().set({
+                content: input.value.trim(),
+                user: user.email,
+                uid: user.uid,
+                timestamp: new Date().toLocaleString("id-ID"),
+                likesCount: 0
+            });
+            input.value = "";
+        }
+    };
+    container.appendChild(input);
+    container.appendChild(button);
+    return container;
+}
+
+function loadReplies(postId, container) {
+    database.ref(`postsMessages/${postId}/replies`).on("value", snapshot => {
+        container.innerHTML = "";
+        snapshot.forEach(child => displayReply(container, postId, child.key, child.val()));
+    });
+}
+
+function displayReply(container, postId, replyId, data) {
+    const replyElement = document.createElement("div");
+    replyElement.classList.add("reply");
+    const user = auth.currentUser;
+
+    database.ref(`users/${data.uid}`).once('value').then(userSnap => {
+        const authorData = userSnap.val() || {};
+        const authorName = authorData.displayName || data.user;
+
+        replyElement.innerHTML = `<p><strong>${authorName}:</strong> 
+  <span id="content-${replyId}">${autoLink(data.content)}${data.edited ? " <span class='edited-tag'>(diedit)</span>" : ""}
+</span></p>`;
+
+        const actions = document.createElement("div");
+        createLikeButton(actions, `postsMessages/${postId}/replies/${replyId}`);
+        
+        if (user && user.uid === data.uid) {
+            const editBtn = document.createElement("button");
+            editBtn.innerText = "Edit";
+            editBtn.onclick = () => toggleEdit(replyId, data.content, `postsMessages/${postId}/replies`);
+            actions.appendChild(editBtn);
+
+            const deleteBtn = document.createElement("button");
+            deleteBtn.innerText = "Hapus";
+            deleteBtn.onclick = () => database.ref(`postsMessages/${postId}/replies/${replyId}`).remove();
+            actions.appendChild(deleteBtn);
+        }
+        replyElement.appendChild(actions);
+        container.appendChild(replyElement);
+    });
+}
+
+function toggleEdit(id, currentContent, path) {
+    const contentElement = document.getElementById(`content-${id}`);
+    if (contentElement.querySelector('textarea')) return;
+
+    contentElement.innerHTML = `
+        <textarea style="width:100%">${currentContent}</textarea>
+        <button onclick="saveEdit('${id}', '${path}')">Simpan</button>
+        <button onclick="cancelEdit('${id}', '${currentContent}')">Batal</button>
+    `;
+}
+
+function saveEdit(id, path) {
+    const newContent = document.querySelector(`#content-${id} textarea`).value;
+    database.ref(`${path}/${id}`).update({ 
+        content: newContent,
+        edited: true
+    });
+}
+
+function cancelEdit(id, originalContent) {
+    document.getElementById(`content-${id}`).innerHTML = `${autoLink(originalContent)} <span class='edited-tag'>(diedit)</span>`;
+}
+
+function createLikeButton(container, dbPath) {
+    const user = auth.currentUser;
+    if (!user) return;
+
+    const likeBtn = document.createElement("button");
+    likeBtn.innerText = "❤️ Suka";
+    likeBtn.classList.add("like-btn");
+    const likeText = document.createElement("span");
+    likeBtn.appendChild(likeText);
+    
+    const likeCountRef = database.ref(`${dbPath}/likesCount`);
+    const userLikeRef = database.ref(`${dbPath}/likes/${user.uid}`);
+
+    likeCountRef.on("value", snap => { likeText.innerText = ` (${snap.val() || 0})`; });
+    userLikeRef.on("value", snap => { likeBtn.classList.toggle("liked", snap.exists()); });
+
+    likeBtn.onclick = () => {
+        database.ref(dbPath).transaction(data => {
+            if (data) {
+                if (!data.likes) {
+                    data.likes = {};
+                }
+                if (data.likes[user.uid]) {
+
+                    data.likesCount--;
+                    data.likes[user.uid] = null;
+                } else {
+
+                    data.likesCount = (data.likesCount || 0) + 1;
+                    data.likes[user.uid] = true;
+                }
+            }
+            return data;
+        });
+    };
+    container.appendChild(likeBtn);
+}
+function updateLeaderboard() {
+    database.ref("users").orderByChild("level").limitToLast(10).on("value", snapshot => {
+        const leaderboardList = document.getElementById("leaderboardList");
+        leaderboardList.innerHTML = "Memuat...";
+        let users = [];
+        snapshot.forEach(child => users.push(child.val()));
+        
+        users.sort((a, b) => b.level - a.level || b.xp - a.xp);
+        leaderboardList.innerHTML = "";
+
+        users.forEach(user => {
+            const li = document.createElement("li");
+            const displayName = user.displayName || user.email.split('@')[0];
+            const avatar = user.profilePictureURL || 'img/profil_1.png';
+            li.innerHTML = `
+                <div style="display:flex; align-items:center;">
+                    <img src="${avatar}" class="leaderboard-avatar">
+                    <span>${displayName}</span>
+                </div>
+                <span>Level: ${user.level} (XP: ${user.xp})</span>
+            `;
+            leaderboardList.appendChild(li);
+        });
     });
 }
 
 function autoLink(text) {
     const urlRegex = /(https?:\/\/[^\s]+)/g;
-    return text.replace(urlRegex, (url) => `<a href="${url}" target="_blank" rel="noopener noreferrer">${url}</a>`);
+    return text.replace(urlRegex, url => `<a href="${url}" target="_blank" rel="noopener noreferrer">${url}</a>`);
 }
 
-document.getElementById('searchInput').addEventListener('input', function () {
-    const keyword = this.value.toLowerCase();
-    const messages = document.querySelectorAll('.message');
+function toggleProfileMenu() {
+    profileMenu.style.display = profileMenu.style.display === "block" ? "none" : "block";
+}
 
-    messages.forEach(msg => {
-        const text = msg.innerText.toLowerCase();
-        msg.style.display = text.includes(keyword) ? 'block' : 'none';
-    });
+let isSearching = false;
+
+const searchInput = document.getElementById('searchInput');
+if (searchInput) {
+  searchInput.addEventListener('input', function () {
+    const keyword = this.value.toLowerCase();
+    if (keyword === '') {
+  isSearching = false;
+  loadFeed();
+} else {
+  isSearching = true;
+  document.querySelectorAll('.message').forEach(msg => {
+    msg.style.display = msg.innerText.toLowerCase().includes(keyword) ? '' : 'none';
+  });
+}
+
+  });
+}
+
+document.addEventListener("click", (e) => {
+  if (profileButton && profileMenu && !profileButton.contains(e.target) && !profileMenu.contains(e.target)) {
+    profileMenu.style.display = "none";
+  }
 });
+
+function applyAutoTheme() {
+  const now = new Date();
+  const hour = now.getHours();
+  const isDarkTime = hour >= 18 || hour < 7;
+
+  if (isDarkTime) {
+    document.body.classList.add("dark-mode");
+    if (themeToggle) themeToggle.innerText = "☀️";
+    localStorage.setItem("theme", "dark");
+  } else {
+    document.body.classList.remove("dark-mode");
+    if (themeToggle) themeToggle.innerText = "🌙";
+    localStorage.setItem("theme", "light");
+  }
+}
