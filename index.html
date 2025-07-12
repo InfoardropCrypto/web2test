@@ -9,63 +9,83 @@
 <body>
    <h1>IACM</h1>
     <header>
-    <details>
-        <summary>☰</summary>
-        <a href="index.html"><button>Home</button></a>
-        <a href="leaderboard.html"><button>Leaderboard</button></a>
-    </details>
-    
-    <!-- Tombol Profil -->
-    <div id="profileButton" class="profile-btn" style="display: none;" onclick="toggleProfileMenu()">
-        <img src="img/profil_1.png" alt="Profil" class="avatar">
-    </div>
+        <details>
+            <summary>☰</summary>
+            <nav>
+                <button id="homeBtn">Home</button>
+                <button id="leaderboardBtn">Leaderboard</button>
+            </nav>
+        </details>
 
-    <div id="profileMenu" class="profile-menu" style="display: none;">
-        <p id="profileEmail"></p>
-        
-        <button id="logoutBtn" style="display: none;">Logout</button>
-    </div>
-</header>
-<br>
-   <div height="150px"></div>
+        <div id="profileButton" class="profile-btn" style="display: none;">
+            </div>
+
+        <div id="profileMenu" class="profile-menu" style="display: none;">
+            <p id="profileEmail"></p>
+            <button id="editProfileBtn">Edit Profil</button>
+            <button id="logoutBtn">Logout</button>
+        </div>
+    </header>
+    <br>
+    <button id="themeToggle" class="theme-btn" title="Ubah Mode Tema">⚙️</button>
 
     <main>
         <section id="authSection">
             <input type="email" id="email" placeholder="Email">
             <input type="password" id="password" placeholder="Password">
-            <button id="signupBtn" style="display:none;">Daftar</button>
             <button id="loginBtn">Login</button>
-            
+            <button id="signupBtn">Daftar</button> 
         </section>
+
         <div id="profileModal" class="modal">
-    <div class="modal-content">
-        <span class="close" onclick="closeProfile()">&times;</span>
-        <h2>Profil Pengguna</h2>
-        <div id="profileContent"></div>
-    </div>
+            <div class="modal-content">
+                <span class="close" onclick="closeProfile()">&times;</span>
+                <h2>Edit Profil</h2>
+                <div id="profileContent">
+                    <div>
+                        <label for="displayNameInput">Nama Tampilan:</label>
+                        <input type="text" id="displayNameInput" placeholder="Nama Tampilan Anda">
+                    </div>
+                    <div>
+  <label for="bioInput">Bio:</label>
+  <textarea id="bioInput" placeholder="Ceritakan tentang dirimu..."></textarea>
+</div>
+<div>
+  <label for="profilePictureURLInput">URL Foto Profil:</label>
+  <input type="text" id="profilePictureURLInput" placeholder="https://example.com/avatar.jpg">
 </div>
 
-        <section id="searchSection">
-    <input type="text" id="searchInput" placeholder="Cari postingan...">
-</section>
-        <section id="feed"></section>
+                    <button id="saveProfileBtn">Simpan Perubahan</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="mainContent">
+            <section id="searchSection">
+                <input type="text" id="searchInput" placeholder="Cari postingan...">
+            </section>
+            <section id="feed"></section>
+        </div>
+
         <section id="leaderboard" style="display:none;">
             <h2>Leaderboard</h2>
             <ul id="leaderboardList"></ul>
         </section>
+        
         <p style="height:200px;"></p>
+        
         <footer>
-        <section id="postMessageSection" style="display: none;">
-            <textarea id="postMessageContent" placeholder="Apa yang sedang terjadi? Atau kirim pesan..."></textarea>
-            <button id="postMessageBtn">Kirim</button>
-        </section>
+            <section id="postMessageSection" style="display: none;">
+                <textarea id="postMessageContent" placeholder="Apa yang sedang terjadi?"></textarea>
+                <button id="postMessageBtn">></button>
+            </section>
         </footer>
     </main>
-    <!-- Firebase SDK -->
-<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
-<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
-<script src="script.js"></script>
 
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-storage.js"></script>
+    <script src="script.js"></script>
 </body>
 </html>
