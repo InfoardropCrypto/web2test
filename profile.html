@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Profil Pengguna</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="container">
+    <div id="profileView"></div>
+    <h3>Post dari pengguna ini:</h3>
+    <div id="userPosts"></div>
+  </div>
+
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-storage.js"></script>
+
+  <script src="script.js"></script>
+
+  <script>
+    // Ambil UID dari parameter URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const uid = urlParams.get("id");
+
+    const profileDiv = document.getElementById("profileView");
+    const userPosts = document.getElementById("userPosts");
+
+    // Tampilkan data profil pengguna
+    database.ref(`users/${uid}`).once("value").then(snapshot => {
+      const user = snapshot.val();
+      if (!user) {
+        profileDiv.innerHTML = "❌ Pengguna tidak ditemukan.";
+        return;
+      }
+
+      profileDiv.innerHTML = `
+        <img src="${user.profilePictureURL || 'img/profil_1.png'}" class="avatar" />
+        <h2>${user.displayName || "Tanpa Nama"} ${user.badge || ""}</h2>
+        <p><strong>Level:</strong> ${user.level} | <strong>XP:</strong> ${user.xp}</p>
+        <p><em>${user.bio || ""}</em></p>
+        <hr>
+      `;
+    });
+
+    // Ambil semua postingan dari pengguna tersebut
+    database.ref("postsMessages").orderByChild("uid").equalTo(uid).once("value").then(snapshot => {
+      if (!snapshot.exists()) {
+        userPosts.innerHTML = "<p>Pengguna ini belum membuat postingan.</p>";
+        return;
+      }
+
+      snapshot.forEach(child => {
+        const post = child.val();
+        const div = document.createElement("div");
+        div.className = "message";
+        div.innerHTML = `
+          <p>${autoLink(post.content)}</p>
+          <span class="timestamp">${post.timestamp}</span>
+        `;
+        userPosts.appendChild(div);
+      });
+    });
+    
+    function autoLink(text) {
+    const urlRegex = /(https?:\/\/[^\s]+)/g;
+    return text.replace(urlRegex, url => `<a href="${url}" target="_blank" rel="noopener noreferrer">${url}</a>`);
+}
+  </script>
+</body>
+</html>
