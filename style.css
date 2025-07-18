@@ -59,7 +59,7 @@ button {
     border-radius: 5px;
     cursor: pointer;
     font-size: 16px;
-    margin-top: 5px;
+    margin: 5px;
     box-sizing: border-box;
     transition: background-color 0.3s;
 }
@@ -92,7 +92,7 @@ button:hover {
     font-size: 12px;
     color: #777;
     margin-left: 8px;
-    display: block;
+    display: inline-block;
     margin-top: 5px;
 }
 
@@ -115,6 +115,43 @@ button:hover {
 
 .reply {
     margin-bottom: 10px;
+    padding: 10px;
+    background-color: #f9f9f9;
+    border-radius: 5px;
+}
+
+.reply-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    margin-bottom: 5px;
+}
+
+.reply-avatar {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+.reply-header div {
+    display: flex;
+    flex-direction: column;
+}
+
+.reply-header p {
+    margin: 0;
+}
+
+.reply-content {
+    font-size: 14px;
+}
+
+.reply-footer {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 5px;
 }
 
 #leaderboard ul {
@@ -135,9 +172,6 @@ button:hover {
     color: white;
     padding: 5px 10px;
     font-size: 14px;
-    position: absolute;
-    top: 10px;
-    right: 10px;
 }
 
 footer {
@@ -180,11 +214,12 @@ footer {
     width: 100%;
     height: 100%;
     background-color: rgba(0, 0, 0, 0.5);
+    overflow: auto;
 }
 
 .modal-content {
     background-color: white;
-    margin: 20% auto;
+    margin: 15% auto;
     padding: 20px;
     width: 90%;
     max-width: 500px;
@@ -217,6 +252,7 @@ footer {
     border-radius: 50%;
     border: 2px solid #fff;
     box-shadow: 0 0 5px rgba(0,0,0,0.2);
+    object-fit: cover;
 }
 
 .profile-menu {
@@ -309,6 +345,7 @@ footer {
     --accent-color: #1877f2;
     --accent-hover-color: #145db2;
     --shadow-color: rgba(0, 0, 0, 0.1);
+    --reply-bg-color: #f9f9f9;
 }
 
 body.dark-mode {
@@ -320,18 +357,12 @@ body.dark-mode {
     --accent-color: #2d88ff;
     --accent-hover-color: #1d73e8;
     --shadow-color: rgba(0, 0, 0, 0.3);
+    --reply-bg-color: #3a3b3c;
 }
 
 body {
-    font-family: Arial, sans-serif;
     background-color: var(--bg-color);
     color: var(--text-color);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    min-height: 100vh;
-    padding: 15px;
-    margin: 0;
     transition: background-color 0.3s, color 0.3s;
 }
 
@@ -339,10 +370,13 @@ body {
     background: var(--primary-bg-color);
     box-shadow: 0 2px 5px var(--shadow-color);
 }
+.reply {
+    background-color: var(--reply-bg-color);
+}
 h1, h2 { color: var(--text-color); }
 .timestamp, .replies p { color: var(--secondary-text-color); }
 .replies { border-left-color: var(--border-color); }
-button { background-color: var(--accent-color); }
+button { background-color: var(--accent-color); color: #fff; }
 button:hover { background-color: var(--accent-hover-color); }
 input, textarea {
     background-color: var(--bg-color);
@@ -380,7 +414,10 @@ input, textarea {
 }
 .editable-content {
     padding: 5px;
-    border: 1px dashed var(--border-color);
+    border: 1px dashed transparent;
+}
+.editable-content:hover {
+    border-color: var(--border-color);
 }
 
 @keyframes fadeIn {
@@ -389,4 +426,17 @@ input, textarea {
 }
 .message {
     animation: fadeIn 0.4s ease-in-out;
+}
+
+.mention {
+    color: var(--accent-color);
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.profile-username {
+    color: var(--secondary-text-color); 
+    font-size: 15px;
+    margin-top: -10px;
+    margin-bottom: 15px;
 }
