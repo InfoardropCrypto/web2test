@@ -36,9 +36,11 @@
         return;
       }
 
+      // Perbarui bagian ini untuk menambahkan username dan foto profil
       profileDiv.innerHTML = `
-        <img src="${user.profilePictureURL || 'img/profil_1.png'}" class="avatar" />
+        <img src="${user.profilePictureURL || 'img/profil_1.png'}" class="avatar" style="width: 80px; height: 80px; border-radius: 50%; margin-bottom: 10px;">
         <h2>${user.displayName || "Tanpa Nama"} ${user.badge || ""}</h2>
+        <p class="profile-username">@${user.username}</p>
         <p><strong>Level:</strong> ${user.level} | <strong>XP:</strong> ${user.xp}</p>
         <p><em>${user.bio || ""}</em></p>
         <hr>
@@ -63,11 +65,11 @@
         userPosts.appendChild(div);
       });
     });
-    
+
     function autoLink(text) {
-    const urlRegex = /(https?:\/\/[^\s]+)/g;
-    return text.replace(urlRegex, url => `<a href="${url}" target="_blank" rel="noopener noreferrer">${url}</a>`);
-}
-  </script>
+        const urlRegex = /(https?:\/\/[^\s]+)/g;
+        return text.replace(urlRegex, url => `<a href="${url}" target="_blank" rel="noopener noreferrer">${url}</a>`);
+    }
+</script>
 </body>
 </html>
